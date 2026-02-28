@@ -29,7 +29,7 @@ const HeroSection = () => {
           transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
           className="text-lg md:text-xl text-primary-foreground/85 mb-8 max-w-xl leading-relaxed"
         >
-          Ontdek pandiculatie — de natuurlijke bewegingstechniek waarmee je
+          Ontdek pandiculatie: de natuurlijke bewegingstechniek waarmee je
           hersenen je spieren leren ontspannen. Zonder kracht, zonder pijn.
         </motion.p>
 
