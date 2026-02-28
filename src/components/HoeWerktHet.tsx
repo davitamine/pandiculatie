@@ -59,6 +59,37 @@ const HoeWerktHet = () => {
             </motion.div>
           ))}
         </div>
+
+        {/* Verschil met stretching */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="mt-16 p-8 md:p-12 bg-sage-light rounded-2xl border border-primary/10"
+        >
+          <h3 className="text-2xl font-serif font-semibold mb-4 text-foreground">
+            Het verschil met stretching
+          </h3>
+          <div className="grid md:grid-cols-2 gap-8 text-muted-foreground">
+            <div>
+              <h4 className="font-sans font-semibold text-foreground mb-2">Stretching</h4>
+              <p>
+                Trekt passief aan een spier. De spier vecht terug met een
+                strekreflex. Het effect is tijdelijk omdat de hersenen niet
+                opnieuw leren.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-sans font-semibold text-primary mb-2">Pandiculatie ✓</h4>
+              <p>
+                Activeert bewust de spier, ontspant langzaam en herstelt de
+                hersencontrole. Het effect is <strong className="text-foreground">blijvend</strong>{" "}
+                omdat het zenuwstelsel opnieuw leert.
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
