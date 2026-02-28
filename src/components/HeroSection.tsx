@@ -3,17 +3,17 @@ import heroImage from "@/assets/hero-pandiculation.jpg";
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+    <section className="relative h-[calc(100vh-4rem)] mt-16 flex items-end overflow-hidden">
       <div className="absolute inset-0">
         <img
           src={heroImage}
-          alt="Persoon die een natuurlijke strekbeweging maakt in de natuur"
+          alt="Vrouw die geeuwd en zich uitstrekt - een natuurlijke pandiculatie"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-foreground/70 via-foreground/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
       </div>
 
-      <div className="relative z-10 section-padding max-w-3xl">
+      <div className="relative z-10 section-padding pb-16 max-w-3xl">
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}

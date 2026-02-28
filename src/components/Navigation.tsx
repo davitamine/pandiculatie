@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const links = [
   { href: "#wat-is-pandiculatie", label: "Wat is het?" },
+  { href: "#drie-reflexen", label: "De 3 reflexen" },
   { href: "#hoe-werkt-het", label: "Hoe werkt het?" },
+  { href: "#oefeningen", label: "Oefeningen" },
   { href: "#voordelen", label: "Voordelen" },
   { href: "#faq", label: "FAQ" },
 ];
