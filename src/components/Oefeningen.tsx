@@ -106,12 +106,20 @@ const Oefeningen = () => {
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed max-w-3xl">
             Deze somatische oefeningen zijn gebaseerd op de methode van Thomas
-            Hanna. Voer ze langzaam en bewust uit — het gaat niet om kracht of
+            Hanna en richten zich specifiek op de drie stressreflexen. Voer ze langzaam en bewust uit — het gaat niet om kracht of
             flexibiliteit, maar om het{" "}
             <strong className="text-foreground">
               herstellen van de communicatie
             </strong>{" "}
             tussen je hersenen en je spieren.
+          </p>
+          <p className="text-base text-muted-foreground leading-relaxed max-w-3xl mt-4">
+            Naast deze oefeningen kun je pandiculatie ook{" "}
+            <strong className="text-foreground">lokaal voor één spier</strong> inzetten. 
+            Voel je bijvoorbeeld spanning in je kaak? Span je kaakspieren dan eerst 
+            bewust aan, en laat ze vervolgens heel rustig en gecontroleerd los. Dit 
+            principe werkt voor elke spier in je lichaam — van je voorhoofd tot je 
+            voeten. Overal waar je spanning voelt, kun je pandiculatie toepassen.
           </p>
         </motion.div>
 

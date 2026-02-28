@@ -2,17 +2,6 @@ import { motion } from "framer-motion";
 
 const reflexes = [
   {
-    name: "Red Light Reflex",
-    dutch: "Terugtrekreflex",
-    icon: "🔴",
-    description:
-      "Dit is onze angst- en beschermingsreflex. De spieren aan de voorkant van het lichaam trekken samen, wat leidt tot een voorovergebogen houding en afgeronde schouders.",
-    causes:
-      "Langdurig zitten, onzekerheid, angst, depressie, emotionele stress of verdriet.",
-    symptoms:
-      "Oppervlakkige ademhaling, nek- en schouderpijn, hoofdpijn, weinig energie, kniepijn, spijsverteringsproblemen en lage rugpijn.",
-  },
-  {
     name: "Green Light Reflex",
     dutch: "Actiereflex",
     icon: "🟢",
@@ -22,6 +11,17 @@ const reflexes = [
       "Te veel hooi op je vork, voortdurende stress, moeite met ontspannen, slechte slaap.",
     symptoms:
       "Rugpijn, hernia, ischias, schouder- en nekpijn, spanningshoofdpijn.",
+  },
+  {
+    name: "Red Light Reflex",
+    dutch: "Terugtrekreflex",
+    icon: "🔴",
+    description:
+      "Dit is onze angst- en beschermingsreflex. De spieren aan de voorkant van het lichaam trekken samen, wat leidt tot een voorovergebogen houding en afgeronde schouders.",
+    causes:
+      "Langdurig zitten, onzekerheid, angst, depressie, emotionele stress of verdriet.",
+    symptoms:
+      "Oppervlakkige ademhaling, nek- en schouderpijn, hoofdpijn, weinig energie, kniepijn, spijsverteringsproblemen en lage rugpijn.",
   },
   {
     name: "Trauma Reflex",

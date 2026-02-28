@@ -67,6 +67,17 @@ const WatIsPandiculatie = () => {
               zenuwstelsel.
             </p>
             <p>
+              Deze patronen ontstaan niet alleen door herhaalde houdingen, maar juist ook door{" "}
+              <strong className="text-foreground">stress en de drie stressreflexen</strong> (de actiereflex, 
+              terugtrekreflex en vermijdingsreflex). Wanneer je chronisch gestresst bent, 
+              activeert je zenuwstelsel onbewust steeds dezelfde reflexpatronen. Je trekt 
+              bijvoorbeeld zonder het te merken je schouders op, spant je kaak aan of kromt 
+              je rug — bewegingen die je onbewust maakt als reactie op spanning. Na verloop 
+              van tijd worden deze onbewuste bewegingen{" "}
+              <strong className="text-foreground">ingeslepen motorische gewoontes</strong> die 
+              je lichaam als "normaal" beschouwt.
+            </p>
+            <p>
               Ons zenuwstelsel begint de betrokken spieren continu enigszins
               samen te trekken om "efficiënt" te zijn. De bijwerkingen?{" "}
               <strong className="text-foreground">
@@ -91,37 +102,6 @@ const WatIsPandiculatie = () => {
           </div>
         </motion.div>
 
-        {/* Verschil met stretching */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-          variants={fadeUp}
-          className="mt-8 p-8 md:p-12 bg-sage-light rounded-2xl border border-primary/10"
-        >
-          <h3 className="text-2xl font-serif font-semibold mb-4 text-foreground">
-            Het verschil met stretching
-          </h3>
-          <div className="grid md:grid-cols-2 gap-8 text-muted-foreground">
-            <div>
-              <h4 className="font-sans font-semibold text-foreground mb-2">Stretching</h4>
-              <p>
-                Trekt passief aan een spier. De spier vecht terug met een
-                strekreflex. Het effect is tijdelijk omdat de hersenen niet
-                opnieuw leren.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-sans font-semibold text-primary mb-2">Pandiculatie ✓</h4>
-              <p>
-                Activeert bewust de spier, ontspant langzaam en herstelt de
-                hersencontrole. Het effect is <strong className="text-foreground">blijvend</strong>{" "}
-                omdat het zenuwstelsel opnieuw leert.
-              </p>
-            </div>
-          </div>
-        </motion.div>
       </div>
     </section>
   );
