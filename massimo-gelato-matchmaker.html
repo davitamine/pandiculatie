@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Massimo Gelato – Smaak-Matchmaker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #F2EDE2;
+      --bg2:     #F8F4EC;
+      --green:   #3A5C28;
+      --greenl:  #4E7A36;
+      --greenp:  #D4E8C8;
+      --coral:   #CC6B63;
+      --corall:  #E08078;
+      --coralp:  #F8E0DC;
+      --dark:    #1E2A14;
+      --mid:     #4A5E3A;
+      --soft:    #7A8E68;
+      --border:  rgba(58,92,40,0.15);
+    }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body { background: var(--bg); font-family: 'Nunito', sans-serif; color: var(--dark); min-height: 100vh; overflow-x: hidden; }
+
+    .screen { min-height: 100vh; display: none; flex-direction: column; align-items: center; justify-content: center; }
+    .screen.active { display: flex; }
+
+    /* ══════════════ WELCOME ══════════════ */
+    #welcome { background: var(--bg); position: relative; overflow: hidden; padding: 2.5rem 1.5rem; text-align: center; }
+    #welcome::before { content:''; position:absolute; width:500px; height:500px; border-radius:50%; background:radial-gradient(circle,rgba(204,107,99,.14),transparent 70%); top:-150px; right:-150px; pointer-events:none; }
+    #welcome::after  { content:''; position:absolute; width:400px; height:400px; border-radius:50%; background:radial-gradient(circle,rgba(58,92,40,.10),transparent 70%); bottom:-100px; left:-80px; pointer-events:none; }
+
+    .welcome-inner { position:relative; z-index:1; max-width:560px; }
+
+    /* Real gelato photo in circular frame */
+    .gelato-hero {
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin: 0 auto 1.5rem;
+      border: 4px solid var(--green);
+      box-shadow: 0 8px 32px rgba(58,92,40,0.2);
+      animation: float 4s ease-in-out infinite;
+      background: var(--greenp);
+      position: relative;
+    }
+    .gelato-hero img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .gelato-hero-fallback {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3.5rem;
+      background: var(--greenp);
+    }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+    .brand-name { font-family:'Playfair Display',serif; font-size: clamp(2.2rem,6vw,3.8rem); font-weight:700; color:var(--coral); line-height:1.1; margin-bottom:.4rem; }
+    .brand-sub  { font-family:'Playfair Display',serif; font-size:clamp(1rem,2.5vw,1.2rem); font-style:italic; color:var(--green); margin-bottom:1.8rem; }
+    .divider    { width:50px; height:3px; background:var(--coral); border-radius:2px; margin:0 auto 1.75rem; }
+    .welcome-desc  { font-size:1.05rem; color:var(--mid); line-height:1.7; margin-bottom:.5rem; }
+    .welcome-small { font-size:.88rem; color:var(--soft); margin-bottom:2.5rem; font-weight:700; }
+
+    .btn-primary { display:inline-flex; align-items:center; gap:.5rem; background:var(--green); color:white; border:none; border-radius:50px; padding:1rem 2.4rem; font-family:'Nunito',sans-serif; font-size:1rem; font-weight:800; cursor:pointer; transition:all .25s ease; box-shadow:0 6px 20px rgba(58,92,40,.3); }
+    .btn-primary:hover { background:var(--greenl); transform:translateY(-2px); box-shadow:0 10px 28px rgba(58,92,40,.35); }
+    .btn-primary:active { transform:translateY(0); }
+    .welcome-tags { display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+    .welcome-tag  { background:white; border:2px solid var(--greenp); border-radius:20px; padding:.3rem .9rem; font-size:.82rem; color:var(--mid); font-weight:700; }
+
+    /* ══════════════ QUIZ ══════════════ */
+    #quiz { background:var(--bg); padding:0; justify-content:flex-start; }
+
+    .quiz-header { width:100%; background:white; border-bottom:2px solid var(--greenp); padding:.9rem 2rem; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10; }
+    .quiz-logo { display:flex; align-items:center; gap:.6rem; }
+    .quiz-logo-ring { width:38px; height:38px; border-radius:50%; border:2px solid var(--green); display:flex; align-items:center; justify-content:center; font-size:1.1rem; overflow:hidden; background:var(--greenp); }
+    .quiz-logo-ring img { width:100%; height:100%; object-fit:cover; display:block; }
+    .quiz-logo-name { font-size:.95rem; font-weight:900; color:var(--green); text-transform:uppercase; letter-spacing:.5px; }
+
+    .quiz-progress-wrap { flex:1; max-width:280px; margin:0 2rem; }
+    .quiz-progress-label { text-align:center; font-size:.78rem; color:var(--soft); margin-bottom:.3rem; font-weight:700; }
+    .quiz-progress-bar { height:5px; background:var(--greenp); border-radius:3px; overflow:hidden; }
+    .quiz-progress-fill { height:100%; background:linear-gradient(90deg,var(--green),var(--coral)); border-radius:3px; transition:width .5s cubic-bezier(.4,0,.2,1); }
+    .quiz-step-counter { font-size:.9rem; color:var(--soft); font-weight:700; white-space:nowrap; }
+    .quiz-step-counter strong { color:var(--green); }
+
+    .quiz-body { flex:1; width:100%; display:flex; align-items:flex-start; justify-content:center; padding:2.5rem 1.5rem 3rem; overflow:hidden; }
+    .question-card { width:100%; max-width:940px; animation:fadeIn .42s cubic-bezier(.4,0,.2,1) forwards; }
+    @keyframes fadeIn  { from{opacity:0;transform:translateX(40px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes fadeOut { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(-40px)} }
+    .question-card.exiting { animation:fadeOut .28s cubic-bezier(.4,0,.2,1) forwards; }
+
+    .question-axis { display:inline-flex; align-items:center; gap:.5rem; background:var(--greenp); color:var(--green); border:2px solid rgba(58,92,40,.2); border-radius:20px; padding:.3rem .9rem; font-size:.78rem; font-weight:800; letter-spacing:.8px; text-transform:uppercase; margin-bottom:1.2rem; }
+    .axis-dot { width:7px; height:7px; border-radius:50%; background:var(--green); }
+    .question-text { font-family:'Playfair Display',serif; font-size:clamp(1.35rem,3vw,1.8rem); font-weight:700; color:var(--coral); line-height:1.3; margin-bottom:2rem; }
+
+    .options-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1.25rem; }
+    @media(max-width:660px) {
+      .options-grid{grid-template-columns:1fr;gap:1rem}
+      .quiz-progress-wrap{max-width:130px;margin:0 .75rem}
+      .quiz-header{padding:.75rem 1rem}
+    }
+
+    .option-card { border:3px solid transparent; border-radius:18px; cursor:pointer; transition:all .25s cubic-bezier(.4,0,.2,1); overflow:hidden; background:white; box-shadow:0 3px 14px rgba(58,92,40,.08); }
+    .option-card:hover { border-color:var(--green); transform:translateY(-5px); box-shadow:0 14px 36px rgba(58,92,40,.18); }
+    .option-card:active { transform:scale(.98); }
+    .option-card.selected { border-color:var(--coral); background:var(--coralp); }
+
+    .option-photo { width:100%; aspect-ratio:4/3; overflow:hidden; position:relative; background:var(--greenp); }
+    .option-photo img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s ease; }
+    .option-card:hover .option-photo img { transform:scale(1.06); }
+    .option-photo-fallback { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.4rem; z-index:1; }
+
+    .option-body { padding:1rem 1.1rem 1.2rem; }
+    .option-letter { font-size:.7rem; font-weight:900; letter-spacing:1.5px; text-transform:uppercase; color:var(--green); margin-bottom:.3rem; }
+    .option-desc { font-size:.9rem; line-height:1.5; color:var(--dark); font-weight:800; }
+
+    /* ══════════════ RESULTS ══════════════ */
+    #results { background:var(--bg); padding:3rem 1.5rem 4rem; justify-content:flex-start; min-height:100vh; }
+    .results-inner { width:100%; max-width:980px; margin:0 auto; }
+
+    .results-header { text-align:center; margin-bottom:2.5rem; }
+    .results-eyebrow { font-size:.82rem; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--green); margin-bottom:.75rem; }
+    .results-title { font-family:'Playfair Display',serif; font-size:clamp(2rem,5vw,3.2rem); font-weight:700; color:var(--coral); line-height:1.15; margin-bottom:.5rem; }
+    .results-divider { width:50px; height:3px; background:var(--coral); margin:1.25rem auto; border-radius:2px; }
+    .results-subtitle { font-size:1rem; color:var(--mid); font-weight:600; }
+
+    .flavors-label { font-family:'Playfair Display',serif; font-size:1.4rem; color:var(--dark); font-weight:700; margin-bottom:1.5rem; text-align:center; }
+    .flavor-cards { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1.25rem; margin-bottom:2.5rem; align-items:start; }
+    @media(max-width:780px){ .flavor-cards{grid-template-columns:1fr 1fr} .flavor-card.rank-1{grid-column:1/-1} }
+    @media(max-width:500px){ .flavor-cards{grid-template-columns:1fr} }
+
+    .flavor-card { background:white; border-radius:22px; overflow:hidden; box-shadow:0 6px 28px rgba(58,92,40,.1); position:relative; transition:transform .3s ease,box-shadow .3s ease; border:3px solid transparent; }
+    .flavor-card:hover { transform:translateY(-4px); box-shadow:0 14px 42px rgba(58,92,40,.16); }
+    .flavor-card.rank-1 { border-color:var(--coral); box-shadow:0 10px 40px rgba(204,107,99,.2); }
+
+    .flavor-rank-badge { position:absolute; top:.9rem; left:.9rem; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.95rem; font-weight:900; z-index:2; }
+    .rank-1 .flavor-rank-badge { background:var(--coral); color:white; }
+    .rank-2 .flavor-rank-badge { background:var(--green); color:white; }
+    .rank-3 .flavor-rank-badge { background:#A09878; color:white; }
+
+    .flavor-photo { width:100%; aspect-ratio:16/9; overflow:hidden; position:relative; background:var(--greenp); }
+    .flavor-photo img { width:100%; height:100%; object-fit:cover; display:block; }
+    .flavor-photo-fallback { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.4rem; z-index:1; }
+
+    .flavor-body { padding:1.2rem 1.4rem 1.5rem; }
+    .flavor-rank-label { font-size:.72rem; font-weight:800; letter-spacing:1.2px; text-transform:uppercase; color:var(--soft); margin-bottom:.25rem; }
+    .rank-1 .flavor-rank-label { color:var(--coral); }
+    .rank-2 .flavor-rank-label { color:var(--green); }
+    .flavor-name { font-family:'Playfair Display',serif; font-size:1.45rem; font-weight:700; color:var(--dark); margin-bottom:.6rem; }
+    .rank-1 .flavor-name { font-size:1.65rem; }
+    .flavor-tags { display:flex; gap:.4rem; flex-wrap:wrap; margin-bottom:.75rem; }
+    .flavor-tag { background:var(--bg); border:2px solid var(--greenp); border-radius:10px; padding:.2rem .65rem; font-size:.75rem; color:var(--mid); font-weight:800; }
+    .flavor-match { font-size:.85rem; color:var(--soft); font-weight:700; }
+    .flavor-match strong { color:var(--coral); }
+
+    /* ── Fun profile story ── */
+    .fun-profile {
+      background: white;
+      border-radius: 26px;
+      padding: 2.5rem 2.75rem;
+      box-shadow: 0 6px 28px rgba(58,92,40,.09);
+      margin-bottom: 2.5rem;
+      border: 2px solid var(--greenp);
+      position: relative;
+      overflow: hidden;
+    }
+    .fun-profile::before {
+      content: '"';
+      position: absolute; top: -1rem; left: 1.5rem;
+      font-size: 13rem; line-height: 1;
+      font-family: 'Playfair Display', serif;
+      color: var(--greenp);
+      z-index: 0; pointer-events: none;
+    }
+    .fun-eyebrow { font-size:.8rem; font-weight:900; letter-spacing:2px; text-transform:uppercase; color:var(--green); margin-bottom:1.2rem; position:relative; z-index:1; }
+    .fun-story {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+      line-height: 1.75;
+      color: var(--dark);
+      font-style: italic;
+      position: relative; z-index: 1;
+      margin-bottom: 1.75rem;
+    }
+    .fun-story strong { color: var(--coral); font-style: normal; font-weight: 700; }
+    .fun-match-pill {
+      display: inline-flex; align-items: center; gap: .6rem;
+      background: var(--coralp); border: 2px solid rgba(204,107,99,.3);
+      border-radius: 50px; padding: .55rem 1.4rem;
+      font-size: .95rem; font-weight: 800; color: var(--coral);
+      position: relative; z-index: 1;
+    }
+
+    /* ── Radar ── */
+    .radar-section { background:white; border-radius:26px; padding:2.5rem; box-shadow:0 6px 28px rgba(58,92,40,.09); margin-bottom:2.5rem; border:2px solid var(--greenp); }
+    .radar-title { font-family:'Playfair Display',serif; font-size:1.55rem; font-weight:700; color:var(--coral); margin-bottom:.3rem; text-align:center; }
+    .radar-sub { font-size:.9rem; color:var(--soft); text-align:center; margin-bottom:2rem; font-weight:600; }
+    .radar-wrap { max-width:500px; margin:0 auto; }
+    .radar-legend { display:grid; grid-template-columns:1fr 1fr; gap:.5rem 1.5rem; max-width:460px; margin:1.5rem auto 0; }
+    .radar-legend-item { display:flex; align-items:center; gap:.5rem; font-size:.84rem; color:var(--mid); font-weight:700; }
+    .rldot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+    .results-footer { text-align:center; padding-bottom:1rem; }
+    .btn-restart { background:transparent; border:3px solid var(--green); color:var(--green); border-radius:50px; padding:.8rem 2rem; font-family:'Nunito',sans-serif; font-size:.95rem; font-weight:800; cursor:pointer; transition:all .25s ease; }
+    .btn-restart:hover { background:var(--green); color:white; }
+
+    /* ── Loader ── */
+    #loader { position:fixed; inset:0; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:999; transition:opacity .6s ease; }
+    #loader.hidden { opacity:0; pointer-events:none; }
+    .loader-ring { width:80px; height:80px; border-radius:50%; border:3px solid var(--green); overflow:hidden; margin-bottom:1.2rem; }
+    .loader-ring img { width:100%; height:100%; object-fit:cover; animation:spin 2s linear infinite; }
+    @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+    .loader-text { font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--green); font-style:italic; }
+
+    /* Fallback gradient backgrounds per option vibe */
+    .fb-water   { background: linear-gradient(135deg,#d0ecf4,#87ceeb); }
+    .fb-peach   { background: linear-gradient(135deg,#ffe5cc,#ffb347); }
+    .fb-green   { background: linear-gradient(135deg,#d4edda,#7dba8a); }
+    .fb-blue    { background: linear-gradient(135deg,#cce8f4,#4a90d9); }
+    .fb-sea     { background: linear-gradient(135deg,#b8e8e0,#20b2aa); }
+    .fb-warm    { background: linear-gradient(135deg,#f5deb3,#d2a679); }
+    .fb-lemon   { background: linear-gradient(135deg,#fffacd,#ffd700); }
+    .fb-floral  { background: linear-gradient(135deg,#f0e0f0,#dda0dd); }
+    .fb-dark    { background: linear-gradient(135deg,#4a3520,#2c1810); }
+    .fb-berry   { background: linear-gradient(135deg,#ffe0e8,#ff6b8a); }
+    .fb-toast   { background: linear-gradient(135deg,#f5deb3,#c4956a); }
+    .fb-spritz  { background: linear-gradient(135deg,#fff0d0,#ff8c00); }
+    .fb-wine    { background: linear-gradient(135deg,#f0e8f4,#9b59b6); }
+    .fb-coffee  { background: linear-gradient(135deg,#3c2415,#6b3a1f); color:#f5deb3; }
+    .fb-cinema  { background: linear-gradient(135deg,#1a1a2e,#16213e); color:#e0e0e0; }
+    .fb-popcrn  { background: linear-gradient(135deg,#fff8dc,#ffd700); }
+    .fb-puzzle  { background: linear-gradient(135deg,#2c1b47,#6a3d9a); color:#e0e0e0; }
+    .fb-min     { background: linear-gradient(135deg,#f8f8f8,#e0e0e0); }
+    .fb-classic { background: linear-gradient(135deg,#f0e8d8,#c8a878); }
+    .fb-color   { background: linear-gradient(135deg,#ff9a9e,#a18cd1); }
+    .fb-piano   { background: linear-gradient(135deg,#1a1a1a,#4a4a4a); color:#f0f0f0; }
+    .fb-jazz    { background: linear-gradient(135deg,#4a2c1a,#8b5e3c); }
+    .fb-dj      { background: linear-gradient(135deg,#0d0d2b,#6600cc); color:#e0e0e0; }
+    .fb-sour    { background: linear-gradient(135deg,#e8f58c,#b5d922); }
+    .fb-gummy   { background: linear-gradient(135deg,#ffb3ba,#ff6b6b); }
+    .fb-caramel { background: linear-gradient(135deg,#f5c97e,#c47c2a); }
+    .fb-mountain{ background: linear-gradient(135deg,#c8e6c9,#2e7d32); }
+    .fb-city    { background: linear-gradient(135deg,#cfd8dc,#455a64); }
+    .fb-beach   { background: linear-gradient(135deg,#b3e5fc,#0277bd); }
+    .fb-chili   { background: linear-gradient(135deg,#ffcdd2,#d32f2f); }
+    .fb-calm    { background: linear-gradient(135deg,#e8f5e9,#81c784); }
+    .fb-social  { background: linear-gradient(135deg,#fff9c4,#ffb300); }
+    .fb-gelato  { background: linear-gradient(135deg,#d4e8c8,#7dba8a); }
+    .fb-emoji   { font-size: 3.5rem; }
+    .fb-label   { font-size: .75rem; font-weight: 800; opacity: .7; }
+  </style>
+</head>
+<body>
+
+<!-- Loader -->
+<div id="loader">
+  <div class="loader-ring">
+    <img src="https://images.unsplash.com/photo-1680438004156-51a1839bd14c?w=200&h=200&fit=crop&q=80" alt="gelato"
+         onerror="this.parentElement.innerHTML='🍦'">
+  </div>
+  <span class="loader-text">Massimo bereidt uw ervaring voor...</span>
+</div>
+
+<!-- ═══════════ WELCOME ═══════════ -->
+<section class="screen active" id="welcome">
+  <div class="welcome-inner">
+
+    <!-- Real gelato photo in circular frame -->
+    <div class="gelato-hero">
+      <img src="https://images.unsplash.com/photo-1680438004156-51a1839bd14c?w=400&h=400&fit=crop&q=80"
+           alt="Massimo Gelato"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="gelato-hero-fallback" style="display:none">🍦</div>
+    </div>
+
+    <h1 class="brand-name">Massimo Gelato</h1>
+    <p class="brand-sub">De Interactieve Smaak-Test</p>
+    <div class="divider"></div>
+    <p class="welcome-desc">Geen dieetlijsten, geen smaaktests — alleen pure intuïtie en gevoel. Beantwoord 12 vragen en ontdek jouw Massimo Match.</p>
+    <p class="welcome-small">✦ 12 vragen &nbsp;·&nbsp; ~3 minuten &nbsp;·&nbsp; Jouw top 3 smaken</p>
+    <button class="btn-primary" onclick="startQuiz()">Begin de test &nbsp;→</button>
+    <div class="welcome-tags">
+      <span class="welcome-tag">🎨 Visueel & Intuïtief</span>
+      <span class="welcome-tag">🧬 Smaak-DNA Analyse</span>
+      <span class="welcome-tag">🍦 22 Italiaanse Smaken</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ QUIZ ═══════════ -->
+<section class="screen" id="quiz">
+  <header class="quiz-header">
+    <div class="quiz-logo">
+      <div class="quiz-logo-ring">
+        <img src="https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=80&h=80&fit=crop&q=80" alt=""
+             onerror="this.outerHTML='🍦'">
+      </div>
+      <span class="quiz-logo-name">Massimo Gelato</span>
+    </div>
+    <div class="quiz-progress-wrap">
+      <div class="quiz-progress-label" id="progressLabel">Vraag 1 van 12</div>
+      <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="progressFill" style="width:8.33%"></div></div>
+    </div>
+    <div class="quiz-step-counter"><strong id="stepNum">1</strong>/12</div>
+  </header>
+  <div class="quiz-body">
+    <div class="question-card" id="questionCard"></div>
+  </div>
+</section>
+
+<!-- ═══════════ RESULTS ═══════════ -->
+<section class="screen" id="results">
+  <div class="results-inner">
+    <div class="results-header">
+      <p class="results-eyebrow">✦ Uw persoonlijk profiel ✦</p>
+      <h2 class="results-title">Jouw Massimo Match is gevonden!</h2>
+      <div class="results-divider"></div>
+      <p class="results-subtitle">Gebaseerd op uw smaak-DNA zijn dit uw drie perfecte smaken</p>
+    </div>
+    <p class="flavors-label">Uw Top 3 Smaken</p>
+    <div class="flavor-cards" id="flavorCards"></div>
+    <div class="fun-profile" id="funProfile"></div>
+    <div class="radar-section">
+      <h3 class="radar-title">Uw Smaak-DNA</h3>
+      <p class="radar-sub">Uw unieke profiel over de vier smaakassen</p>
+      <div class="radar-wrap"><canvas id="radarChart"></canvas></div>
+      <div class="radar-legend" id="radarLegend"></div>
+    </div>
+    <div class="results-footer">
+      <button class="btn-restart" onclick="restartQuiz()">↺ &nbsp;Begin opnieuw</button>
+    </div>
+  </div>
+</section>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  PHOTO HELPER — curated Unsplash CDN URLs per item
+//  Each lock‑id maps to a hand‑picked photo.
+//  Format: https://images.unsplash.com/photo-{id}?w=W&h=H&fit=crop&q=80
+// ══════════════════════════════════════════════════════
+const _U = (id, w, h) => `https://images.unsplash.com/${id}?w=${w}&h=${h}&fit=crop&q=80`;
+const PHOTO_MAP = {
+  // ── Vraag-foto's (lock 1–36) — geverifieerd via Unsplash API ──
+  1:  _U('photo-1771733689805-a212e5e53205',600,450), // watermeloen schijfjes
+  2:  _U('photo-1674672239572-8d8cc7186f8e',600,450), // rijpe perzik
+  3:  _U('photo-1594921194380-d4d03d481e83',600,450), // avocado doormidden
+  4:  _U('photo-1753372623416-bc8bf85eab06',600,450), // alpien bergmeer
+  5:  _U('photo-1683230410161-e2b995eb4bcd',600,450), // turquoise zee / strand
+  6:  _U('photo-1670143773636-b392483d9021',600,450), // hammam / spa / stoom
+  7:  _U('photo-1626810257238-19db99ca6c4c',600,450), // citroenwater koud glas
+  8:  _U('photo-1762898841702-244e320da5b1',600,450), // iced tea met perzik
+  9:  _U('photo-1622322816396-4363b777eee7',600,450), // ijskoffie met melk
+  10: _U('photo-1718196917011-801cddb84334',600,450), // verse citroen / citrus
+  11: _U('photo-1679379367439-3e1172083c49',600,450), // witte jasmijn bloemen
+  12: _U('photo-1772986238969-8030f58c2668',600,450), // pure donkere chocolade
+  13: _U('photo-1772766115480-a39cc40482dd',600,450), // kom vol bessen
+  14: _U('photo-1597528673850-e27492b0335f',600,450), // croissant met boter
+  15: _U('photo-1563822249310-5b066ba85162',600,450), // pindakaas op toast
+  16: _U('photo-1588685328095-cf9d5c09708f',600,450), // aperol spritz oranje
+  17: _U('photo-1761222835470-6c198d2a5d8e',600,450), // glas witte wijn
+  18: _U('photo-1761640771666-653de7b91954',600,450), // espresso kop
+  19: _U('photo-1705822898715-369170f541cf',600,450), // bioscoop stoelen
+  20: _U('photo-1768851062753-4face8de185c',600,450), // popcorn filmavond
+  21: _U('photo-1609058700004-608180fae6ac',600,450), // puzzelstukjes
+  22: _U('photo-1617363127851-7c89223b92cc',600,450), // minimalistisch interieur
+  23: _U('photo-1745573672923-6cf4c5979dd2',600,450), // klassiek elegant interieur
+  24: _U('photo-1566152474719-8d79ca1a4c66',600,450), // kleurrijk bohemien interieur
+  25: _U('photo-1575314113965-c6672a42b99c',600,450), // vleugel piano concert
+  26: _U('photo-1770399883774-4a5ca3e32a7d',600,450), // jazz saxofoon live
+  27: _U('photo-1608433299744-f1d2abfda5b5',600,450), // dj draaitafel neon
+  28: _U('photo-1605315024045-0034d6ba5c07',600,450), // zure snoepjes citroen
+  29: _U('photo-1641420421863-4b7f0940f287',600,450), // gummy bears kleurrijk
+  30: _U('photo-1650419741906-1cdead9c9b4f',600,450), // zachte karamel fudge
+  31: _U('photo-1643892492756-ffc3d71f8cd1',600,450), // bergwandeling trail
+  32: _U('photo-1727942019403-cf4aecfc3276',600,450), // stadsgezicht zonsondergang
+  33: _U('photo-1773281175670-a0b0864fb7ac',600,450), // tropisch strand hangmat
+  34: _U('photo-1622993361024-ae1c39cda16c',600,450), // rode chilipeper
+  35: _U('photo-1770357012938-aacdb0b7e85f',600,450), // zen tuin stenen
+  36: _U('photo-1625283518288-00362afc8663',600,450), // vrienden lachen samen
+
+  // ── Smaakresultaat foto's (lock 101–122) — geverifieerd via Unsplash API ──
+  101: _U('photo-1583118289889-f9e5ee78c82a',600,400), // Lemon sorbet geel
+  102: _U('photo-1765292954050-53d95ff60b6c',600,400), // Passion fruit tropisch
+  103: _U('photo-1575980541474-bf9e64967d55',600,400), // Strawberry vers rood
+  104: _U('photo-1673010960635-d0d1ad81b90a',600,400), // Mango gesneden
+  105: _U('photo-1593410974855-87ab9de04bb5',600,400), // Dark Chocolate gelato
+  106: _U('photo-1473014805482-c0098dc9e9b2',600,400), // Vegan Hazelnut nootjes
+  107: _U('photo-1727405461640-4e4eb6fca071',600,400), // Vegan Pistachio groen
+  108: _U('photo-1561336420-a616047f0a97',600,400), // Coffee gelato espresso
+  109: _U('photo-1727405461640-4e4eb6fca071',600,400), // Pistachio groen room
+  110: _U('photo-1473014805482-c0098dc9e9b2',600,400), // Hazelnut nootachtig
+  111: _U('photo-1628815756611-7b1b8f68d460',600,400), // Milk Chocolate romig
+  112: _U('photo-1686998424979-cfc089e79d92',600,400), // Fior di latte wit
+  113: _U('photo-1626182767767-ca6edbb7a6c7',600,400), // Vanilla bol scoop
+  114: _U('photo-1708190489461-688f6e6f06a9',600,400), // Crema goud ei
+  115: _U('photo-1590085345642-cc15c79a9607',600,400), // Yoghurt fris bessen
+  116: _U('photo-1625535927032-dd38fdf54f84',600,400), // Coconut tropisch
+  117: _U('photo-1593563645925-83b8da3a86b0',600,400), // Stracciatella choc chip
+  118: _U('photo-1605315357200-a4668c8e7a3f',600,400), // Ricotta & Figs vijgen
+  119: _U('photo-1650419741906-1cdead9c9b4f',600,400), // Caramel & Salt goud
+  120: _U('photo-1759303380841-55c09244fd2b',600,400), // Cheesecake romig
+  121: _U('photo-1593545024944-b3c74435b9f3',600,400), // Tiramisu Italiaans
+  122: _U('photo-1773620495349-00f5c318ca7d',600,400), // Choc Caramel saus
+};
+const PH = (w, h, kw, lock) => PHOTO_MAP[lock] || _U('photo-1772290677193-b3d2ed5ffa57', w, h);
+
+// ══════════════════════════════════════════════════════
+//  22 FLAVORS (data from Excel)
+// ══════════════════════════════════════════════════════
+const FLAVORS = [
+  { name:"Lemon",              emoji:"🍋", basis:1,profiel:1,filosofie:1,prikkel:1,
+    tags:["Sorbet","Fris","Puur"],        photo:PH(600,400,"lemon,gelato,sorbet,scoop",101) },
+  { name:"Passion",            emoji:"🌺", basis:1,profiel:1,filosofie:1,prikkel:1,
+    tags:["Sorbet","Tropisch","Intens"],  photo:PH(600,400,"passionfruit,sorbet,icecream",102) },
+  { name:"Strawberry",         emoji:"🍓", basis:1,profiel:1,filosofie:1,prikkel:2,
+    tags:["Sorbet","Fruitig","Zacht"],    photo:PH(600,400,"strawberry,gelato,scoop",103) },
+  { name:"Mango",              emoji:"🥭", basis:1,profiel:1,filosofie:1,prikkel:3,
+    tags:["Sorbet","Tropisch","Zalvend"], photo:PH(600,400,"mango,sorbet,icecream",104) },
+  { name:"Dark Chocolate",     emoji:"🍫", basis:1,profiel:3,filosofie:1,prikkel:1,
+    tags:["Sorbet","Diep","Intens"],      photo:PH(600,400,"dark,chocolate,gelato",105) },
+  { name:"Vegan Hazelnut",     emoji:"🌰", basis:1,profiel:3,filosofie:1,prikkel:2,
+    tags:["Vegan","Nootachtig","Diep"],   photo:PH(600,400,"hazelnut,icecream,gelato",106) },
+  { name:"Vegan Pistachio",    emoji:"🫘", basis:1,profiel:3,filosofie:1,prikkel:2,
+    tags:["Vegan","Nootachtig","Elegant"],photo:PH(600,400,"pistachio,gelato,green",107) },
+  { name:"Coffee",             emoji:"☕", basis:3,profiel:3,filosofie:2,prikkel:1,
+    tags:["Room","Geroosterd","Bitter"],  photo:PH(600,400,"coffee,icecream,gelato",108) },
+  { name:"Pistachio",          emoji:"🌿", basis:3,profiel:3,filosofie:1,prikkel:2,
+    tags:["Room","Nootachtig","Puur"],    photo:PH(600,400,"pistachio,icecream,scoop",109) },
+  { name:"Hazelnut",           emoji:"🌰", basis:3,profiel:3,filosofie:1,prikkel:2,
+    tags:["Room","Geroosterd","Vol"],     photo:PH(600,400,"hazelnut,chocolate,icecream",110) },
+  { name:"Milk Chocolate",     emoji:"🍫", basis:3,profiel:3,filosofie:1,prikkel:3,
+    tags:["Room","Chocolade","Zalvend"],  photo:PH(600,400,"chocolate,icecream,creamy",111) },
+  { name:"Fior di latte",      emoji:"🥛", basis:3,profiel:2,filosofie:1,prikkel:2,
+    tags:["Room","Melk","Puur"],          photo:PH(600,400,"vanilla,gelato,white,scoop",112) },
+  { name:"Vanilla",            emoji:"🌼", basis:3,profiel:2,filosofie:1,prikkel:2,
+    tags:["Room","Vanille","Klassiek"],   photo:PH(600,400,"vanilla,icecream,scoop",113) },
+  { name:"Crema",              emoji:"🍮", basis:3,profiel:2,filosofie:1,prikkel:3,
+    tags:["Room","Ei","Zalvend"],         photo:PH(600,400,"custard,icecream,creamy",114) },
+  { name:"Yoghurt",            emoji:"🫙", basis:2,profiel:1,filosofie:1,prikkel:1,
+    tags:["Halfvol","Fris","Licht"],      photo:PH(600,400,"yogurt,icecream,fresh",115) },
+  { name:"Coconut",            emoji:"🥥", basis:2,profiel:2,filosofie:1,prikkel:2,
+    tags:["Halfvol","Tropisch","Romig"],  photo:PH(600,400,"coconut,icecream,tropical",116) },
+  { name:"Stracciatella",      emoji:"✨", basis:2,profiel:2,filosofie:2,prikkel:2,
+    tags:["Halfvol","Choc. Chip","Klassiek"],photo:PH(600,400,"stracciatella,chocolate,icecream",117) },
+  { name:"Ricotta and Figs",   emoji:"🍇", basis:2,profiel:2,filosofie:2,prikkel:2,
+    tags:["Halfvol","Vijgen","Artisanaal"],  photo:PH(600,400,"fig,ricotta,dessert",118) },
+  { name:"Caramel and salt",   emoji:"🧂", basis:3,profiel:3,filosofie:2,prikkel:3,
+    tags:["Room","Karamel","Zoet-Zout"],  photo:PH(600,400,"salted,caramel,icecream",119) },
+  { name:"Cheesecake",         emoji:"🍰", basis:3,profiel:2,filosofie:3,prikkel:3,
+    tags:["Room","Romig","Creatief"],     photo:PH(600,400,"cheesecake,dessert,creamy",120) },
+  { name:"Tiramisu",           emoji:"🤎", basis:3,profiel:3,filosofie:3,prikkel:2,
+    tags:["Room","Koffie","Italiaans"],   photo:PH(600,400,"tiramisu,coffee,italian",121) },
+  { name:"Choc. Caramel/Salt", emoji:"🍫", basis:3,profiel:3,filosofie:3,prikkel:3,
+    tags:["Room","Chocolade","Caramel"],  photo:PH(600,400,"chocolate,caramel,icecream",122) },
+];
+
+// ══════════════════════════════════════════════════════
+//  GRAPPIGE VERHAALLIJNEN per smaak
+//  Format: function(kw1, kw2, kw3) => story text
+// ══════════════════════════════════════════════════════
+const FLAVOR_STORIES = {
+  "Lemon": (a,b,c) => `Stel je voor: iemand die begint met <strong>${a}</strong>, daarna <strong>${b}</strong> bestelt en vervolgens droomt van <strong>${c}</strong>. Dat is een persoon die van het leven houdt, maar ook gewoon weet wat ie wil. Geen poespas, geen toeters en bellen. Gewoon puur, fris en direct. Dat is ook precies waarom <strong>Lemon</strong> jouw ijs is. Zo helder als een citroentje in je gezicht — en bijna net zo verfrissend.`,
+  "Passion": (a,b,c) => `Jij kiest <strong>${a}</strong>, bestelt <strong>${b}</strong> en als het aan jou lag hang je nu ergens bij <strong>${c}</strong>. Er zit een patroon in, en dat patroon heet: leven met intensiteit. Je hoeft niet per se de luidste in de kamer te zijn, maar saai? Dat nooit. Exact waarom <strong>Passion</strong> jouw smaak is — tropisch, intens, en altijd net iets spannender dan verwacht.`,
+  "Strawberry": (a,b,c) => `<strong>${a}</strong>, <strong>${b}</strong>, <strong>${c}</strong> — de vakantie van iemand die precies weet hoe genieten werkt. Je hoeft het niet ingewikkeld te maken. Aardbeien zijn al duizend jaar lekker en jij wist dat al. <strong>Strawberry</strong> gelato is jouw match: vertrouwd, zomers, en eerlijk gezegd gewoon altijd goed.`,
+  "Mango": (a,b,c) => `Iemand die begint met <strong>${a}</strong>, later <strong>${b}</strong> bestelt en idealiter sluit met <strong>${c}</strong>… die persoon weet waar het over gaat. Warm, zalvend, beetje tropisch in de ziel. <strong>Mango sorbet</strong> was het enige logische antwoord. Zo zoet dat het bijna niet eerlijk is voor de rest van de smaken.`,
+  "Dark Chocolate": (a,b,c) => `<strong>${a}</strong>. <strong>${b}</strong>. En dan <strong>${c}</strong>. Kort, krachtig, geen onnodige fratsen. Je houdt van dingen die ergens voor staan — en je hebt een hekel aan mensen die alles maar "ook wel lekker" vinden. <strong>Dark Chocolate</strong> past perfect bij jou. Puur, intens, en absoluut niet voor iedereen. Dat is het mooie eraan.`,
+  "Vegan Hazelnut": (a,b,c) => `Van <strong>${a}</strong> via <strong>${b}</strong> naar het dagdromen over <strong>${c}</strong> — jij hebt een duidelijke smaak voor het leven. En die smaak is nootachtig, geroosterd, en stiekem ook best bewust bezig met de wereld. <strong>Vegan Hazelnut</strong> is dan ook gewoon logisch. Lekker én goed bezig. Dat snap je.`,
+  "Vegan Pistachio": (a,b,c) => `<strong>${a}</strong>, <strong>${b}</strong> en dromen van <strong>${c}</strong>. Jij bent het type dat net iets chiquer kiest dan de rest. Niet per se duurder — gewoon: meer karakter. <strong>Vegan Pistachio</strong> past daarbij: groen, subtiel nootachtig en net iets verfijnder dan het standaardaanbod. Je hebt smaak. Letterlijk.`,
+  "Coffee": (a,b,c) => `<strong>${a}</strong> als ideale setting, <strong>${b}</strong> als drankje van keuze, en <strong>${c}</strong> als eindbestemming. Alles aan jou zegt: laat het maar sterk zijn, of laat het maar helemaal. Halfwerk is niks voor jou. <strong>Coffee gelato</strong> begrijpt dat. Bitter, krachtig en zonder excuus aanwezig. Net als jij.`,
+  "Pistachio": (a,b,c) => `Van <strong>${a}</strong>, <strong>${b}</strong> en het verlangen naar <strong>${c}</strong> — er is iets tijdloos aan jou. Je kiest niet voor de hype, je kiest voor de klassieker. De smaak die al decennia meegaat zonder uitleg nodig te hebben. <strong>Pistachio</strong>. Nooit saai, altijd bijzonder. Dat zeggen ze ook over jou.`,
+  "Hazelnut": (a,b,c) => `<strong>${a}</strong>, dan <strong>${b}</strong> bestellen en daarna wegdromen bij <strong>${c}</strong>. Warm, vertrouwd, comfortabel — maar met karakter. Je bent geen droog stukje crackers. Je bent een volle hazelnoot met een beetje chocolade eromheen. Logisch dus dat <strong>Hazelnut gelato</strong> jouw nummer één is. Knuffelig van smaak, en dat is een compliment.`,
+  "Milk Chocolate": (a,b,c) => `<strong>${a}</strong> als favoriete moment, <strong>${b}</strong> erbij, en de droom heet <strong>${c}</strong>. Diep vanbinnen heb jij gewoon een warm hart. Je vindt het fijn als mensen blij zijn, als dingen soepel lopen en als het dessert zacht is. <strong>Melkchocolade gelato</strong>. Niet de meest avontuurlijke keuze — wel de meest eerlijke. En dat is precies wat we bedoelen.`,
+  "Fior di latte": (a,b,c) => `<strong>${a}</strong>, <strong>${b}</strong> en idealiter eindigend met <strong>${c}</strong>. Jij bent iemand die weet dat minder soms meer is. Geen gedoe, geen overbodige fratsen. <strong>Fior di latte</strong> is de puurste smaak die er bestaat — alleen verse melk, vakmanschap en stilte. Net als jij op je best: simpel op het oog, bijzonder van binnen.`,
+  "Vanilla": (a,b,c) => `<strong>${a}</strong> als setting, <strong>${b}</strong> als ritueel en <strong>${c}</strong> als einddoel. Voor jou hoeft het niet schreeuwerig te zijn. Echt goed is al indrukwekkend genoeg. <strong>Vanille</strong> — en dat is absoluut geen belediging. Echte bourbon vanille is het meest complexe aroma op aarde. Net als jij, als mensen echt kijken.`,
+  "Crema": (a,b,c) => `Van <strong>${a}</strong> via <strong>${b}</strong> naar <strong>${c}</strong>. Zijdezacht, vol, precies goed. Geen tierelantijnen, geen opsmuk — gewoon perfectie op een lepeltje. Zo kijk jij ook naar het leven. <strong>Crema gelato</strong> is jouw ijs: romig ei, subtiel zoet, en het type smaak waarvoor je geen uitleg nodig hebt. Het klopt gewoon.`,
+  "Yoghurt": (a,b,c) => `<strong>${a}</strong>, <strong>${b}</strong>, en het verlangen naar <strong>${c}</strong>. Jij bent fris, licht en voelt je er altijd een beetje deugdzaam bij. Maar je geniet ook gewoon — geen guilty pleasure, gewoon: pleasure. <strong>Yoghurt sorbet</strong> is dat in ijsvorm. Fris, eerlijk en net lekker genoeg om geen grammetje twijfel te voelen.`,
+  "Coconut": (a,b,c) => `<strong>${a}</strong> als droom, <strong>${b}</strong> als ritueel en liefst eindigend met <strong>${c}</strong>. Jij draagt de Bahama's altijd een beetje in je hoofd — en dat gunnen we je. <strong>Kokosnoot gelato</strong> is jouw directe lijn naar het eiland, ook als je gewoon op een bankje in de stad zit. Sluit je ogen. Proef. Daar ben je dan.`,
+  "Stracciatella": (a,b,c) => `<strong>${a}</strong>, <strong>${b}</strong> en dan ook nog eens <strong>${c}</strong>. Jij bent een klassieker met een twist. Je hoeft niet te kiezen tussen pure smaken en een beetje spanning — je neemt gewoon allebei. <strong>Stracciatella</strong>: romig, met precies genoeg chocolade om interessant te blijven. Precies zoals jij.`,
+  "Ricotta and Figs": (a,b,c) => `Van <strong>${a}</strong> via <strong>${b}</strong> naar de droom van <strong>${c}</strong> — jij bent niet iemand die het standaardmenu bestelt. Je zoekt het verhaal achter het gerecht. <strong>Ricotta met vijgen</strong> is artisanaal, subtiel en precies het type smaak dat je niet uitlegt maar gewoon voelt. Mensen met jouw smaak begrijpen het meteen.`,
+  "Caramel and salt": (a,b,c) => `<strong>${a}</strong> als moment, <strong>${b}</strong> als keuze, en <strong>${c}</strong> als droom. Jij weet dat de beste dingen in het leven altijd een klein beetje tegenstrijdig zijn. Zoet én zout. Warm én koel. Simpel én complex. <strong>Caramel met zout</strong> is precies dat. Een combinatie die geen compromis is — het is gewoon beter zo.`,
+  "Cheesecake": (a,b,c) => `<strong>${a}</strong>, <strong>${b}</strong> en het verlangen naar <strong>${c}</strong>. Jij bent creatief, romig van ziel en houdt van onverwachte combinaties. <strong>Cheesecake gelato</strong> past bij je: een klein beetje buiten de lijntjes, maar met genoeg comfort om niet raar te worden. Een kleine verrassing, net als jij.`,
+  "Tiramisu": (a,b,c) => `Van <strong>${a}</strong> via <strong>${b}</strong> naar het dagdromen over <strong>${c}</strong>. Italiaans van geest, complex van smaak en onweerstaanbaar aanwezig. Dat ben jij. En dat is <strong>Tiramisu gelato</strong>. Koffie, mascarpone, cacaopoeder — alles op zijn plek, niks overbodig. Meer valt er eerlijk gezegd niet over te zeggen.`,
+  "Choc. Caramel/Salt": (a,b,c) => `<strong>${a}</strong>, <strong>${b}</strong> en dan ook nog eens dromen van <strong>${c}</strong>. Jij wilt alles. En eerlijk gezegd: waarom zou je kiezen? <strong>Chocolade, karamel én zout tegelijk</strong>. Omdat de wereld niet hoeft te kiezen tussen fijn en fijner. Jij in één schep. En wat een schep.`,
+};
+
+// ══════════════════════════════════════════════════════
+//  12 QUESTIONS — loremflickr photos + fallback gradient
+// ══════════════════════════════════════════════════════
+const QUESTIONS = [
+  // ── As 1: Basis ──
+  {
+    axis:"As 1 · De Basis", text:"Welke structuur spreekt je zintuigen het meest aan?",
+    options:[
+      { letter:"A", score:1, keyword:"een sappige watermeloen", fb:"fb-water",  emoji:"🍉",
+        photo:PH(600,450,"watermelon,slice,red,fruit",1),
+        desc:'"De knapperige, sappige beet van een watermeloen"' },
+      { letter:"B", score:2, keyword:"een rijpe, zachte perzik",  fb:"fb-peach", emoji:"🍑",
+        photo:PH(600,450,"peach,ripe,fruit,soft",2),
+        desc:'"De zachte, fluweelachtige schil van een rijpe perzik"' },
+      { letter:"C", score:3, keyword:"een romige avocado",       fb:"fb-green", emoji:"🥑",
+        photo:PH(600,450,"avocado,halved,green,creamy",3),
+        desc:'"De volle, vette rijkdom van een perfecte avocado"' },
+    ]
+  },
+  {
+    axis:"As 1 · De Basis", text:"Waarin zou je jezelf het liefst onderdompelen?",
+    options:[
+      { letter:"A", score:1, keyword:"een ijskoud bergmeer",        fb:"fb-blue",    emoji:"🏔️",
+        photo:PH(600,450,"mountain,lake,cold,crystal,alpine",4),
+        desc:'"Een duik in een ijskoud bergmeer op een bloedhete middag"' },
+      { letter:"B", score:2, keyword:"een kalme, zoute zee",         fb:"fb-sea",     emoji:"🌊",
+        photo:PH(600,450,"calm,turquoise,sea,ocean,beach",5),
+        desc:'"Loom dobberen in een kalme, zoute zee tijdens een stranddag"' },
+      { letter:"C", score:3, keyword:"een warme Turkse hammam",      fb:"fb-warm",    emoji:"🛁",
+        photo:PH(600,450,"turkish,bath,hammam,spa,steam",6),
+        desc:'"Een warme Turkse hammam met rijke zepen en een body scrub"' },
+    ]
+  },
+  // ── Q3: Dorstlesser tijdens wandeling ──
+  {
+    axis:"As 1 · De Basis", text:"Wat is je favoriete manier om de dorst te lessen tijdens een lange wandeling?",
+    options:[
+      { letter:"A", score:1, keyword:"ijskoud bronwater met citroen", fb:"fb-lemon",   emoji:"💧",
+        photo:PH(600,450,"lemon,water,glass,fresh,cold",7),
+        desc:'"Puur natuur: ijskoud bronwater met een schijfje citroen"' },
+      { letter:"B", score:2, keyword:"iced tea met perzik",           fb:"fb-peach",   emoji:"🍑",
+        photo:PH(600,450,"iced,tea,peach,cold,refreshing",8),
+        desc:'"Een verfrissende iced tea met een klein beetje suiker en perzik"' },
+      { letter:"C", score:3, keyword:"luxe ijskoffie met koude melk", fb:"fb-coffee",  emoji:"☕",
+        photo:PH(600,450,"iced,coffee,milk,cold,latte",9),
+        desc:'"Een luxe ijskoffie met een flinke scheut koude melk"' },
+    ]
+  },
+  // ── As 2: Profiel ──
+  {
+    axis:"As 2 · Het Profiel", text:"Welke geurlijn kies je instinctief?",
+    options:[
+      { letter:"A", score:1, keyword:"citrus en verse munt",         fb:"fb-lemon",  emoji:"🍋",
+        photo:PH(600,450,"lemon,lime,citrus,mint,fresh",10),
+        desc:'"Zest & Zen: Citrusvruchten, vers gras en munt"' },
+      { letter:"B", score:2, keyword:"witte bloemen en vanille",      fb:"fb-floral", emoji:"🌸",
+        photo:PH(600,450,"white,flowers,jasmine,blossom,floral",11),
+        desc:'"Silk & Cotton: Schone was, witte bloemen en vanille"' },
+      { letter:"C", score:3, keyword:"donkere cacao en amandelen",    fb:"fb-dark",   emoji:"☕",
+        photo:PH(600,450,"dark,chocolate,cocoa,roasted,almonds",12),
+        desc:'"Roasted Earth: Donkere cacao, geroosterde amandelen en eikenhout"' },
+    ]
+  },
+  {
+    axis:"As 2 · Het Profiel", text:"Wat ligt er op je droomontbijt-bord?",
+    options:[
+      { letter:"A", score:1, keyword:"een kom vol rood fruit",       fb:"fb-berry",  emoji:"🍓",
+        photo:PH(600,450,"berries,bowl,strawberry,raspberry,red",13),
+        desc:'"Een kom met vers rood fruit, granaatappel en limoen"' },
+      { letter:"B", score:2, keyword:"een croissant met aardbeienjam", fb:"fb-warm", emoji:"🥐",
+        photo:PH(600,450,"croissant,pastry,butter,jam,breakfast",14),
+        desc:'"Een knapperig croissantje met roomboter en aardbeienjam"' },
+      { letter:"C", score:3, keyword:"toast met pindakaas",           fb:"fb-toast",  emoji:"🍞",
+        photo:PH(600,450,"peanut,butter,toast,bread,breakfast",15),
+        desc:'"Toast met crunchy pindakaas of rijke hazelnootpasta"' },
+    ]
+  },
+  {
+    axis:"As 2 · Het Profiel", text:"Wat bestel je op het terras voor de 'Aperitivo'?",
+    options:[
+      { letter:"A", score:1, keyword:"een sprankelende Aperol Spritz", fb:"fb-spritz", emoji:"🍹",
+        photo:PH(600,450,"aperol,spritz,orange,cocktail,italian",16),
+        desc:'"Een sprankelende Spritz: bitterzoet en fruitig"' },
+      { letter:"B", score:2, keyword:"een glas droge witte wijn",      fb:"fb-wine",   emoji:"🥂",
+        photo:PH(600,450,"white,wine,glass,vineyard,chilled",17),
+        desc:'"Een glas klassieke droge witte wijn"' },
+      { letter:"C", score:3, keyword:"een dubbele espresso",           fb:"fb-coffee", emoji:"☕",
+        photo:PH(600,450,"espresso,coffee,italian,shot,cup",18),
+        desc:'"Een krachtige Espresso of een glas robuuste rode wijn"' },
+    ]
+  },
+  // ── As 3: Filosofie ──
+  {
+    axis:"As 3 · De Filosofie", text:"Wat voor type filmkijker ben je?",
+    options:[
+      { letter:"A", score:1, keyword:"documentaires en slow cinema",    fb:"fb-cinema", emoji:"🎬",
+        photo:PH(600,450,"cinema,film,documentary,theater,movie",19),
+        desc:'"De Purist: Documentaires of slow-movies over één onderwerp"' },
+      { letter:"B", score:2, keyword:"een goede rom-com of actiefilm", fb:"fb-popcrn", emoji:"🎭",
+        photo:PH(600,450,"popcorn,movie,cinema,watching,couch",20),
+        desc:'"De Klassieker: Een Rom-Com of actiefilm met een duidelijk plot"' },
+      { letter:"C", score:3, keyword:"mindbenders met plottwists",      fb:"fb-puzzle", emoji:"🧩",
+        photo:PH(600,450,"puzzle,mystery,brain,complex,dark",21),
+        desc:'"De Puzzelaar: Een Mindbender met plottwists en complexe personages"' },
+    ]
+  },
+  {
+    axis:"As 3 · De Filosofie", text:"Welke stijl kies je voor je droomhuis?",
+    options:[
+      { letter:"A", score:1, keyword:"een minimalistische witte kamer",    fb:"fb-min",     emoji:"⬜",
+        photo:PH(600,450,"minimalist,interior,white,room,clean",22),
+        desc:'"Minimalisme: Eén designstuk in een lege witte kamer"' },
+      { letter:"B", score:2, keyword:"tijdloze klassieke meubels",         fb:"fb-classic",  emoji:"🪑",
+        photo:PH(600,450,"classic,furniture,interior,elegant,timeless",23),
+        desc:'"Tijdloze Elegantie: Klassieke meubels die decennia meegaan"' },
+      { letter:"C", score:3, keyword:"een maximalistisch kleurrijk interieur", fb:"fb-color", emoji:"🎨",
+        photo:PH(600,450,"colorful,eclectic,interior,bohemian,vibrant",24),
+        desc:'"Maximalisme: Een bonte verzameling van kleuren en kunst"' },
+    ]
+  },
+  {
+    axis:"As 3 · De Filosofie", text:"Welke soundtrack past bij jouw geniet-moment?",
+    options:[
+      { letter:"A", score:1, keyword:"een loepzuivere pianosolist",    fb:"fb-piano", emoji:"🎹",
+        photo:PH(600,450,"grand,piano,classical,concert,keys",25),
+        desc:'"Een loepzuivere solo op een vleugel"' },
+      { letter:"B", score:2, keyword:"een swingende jazztrio",         fb:"fb-jazz",  emoji:"🎷",
+        photo:PH(600,450,"jazz,saxophone,trio,music,live",26),
+        desc:'"Een jazzy trio dat soepel en voorspelbaar samenwerkt"' },
+      { letter:"C", score:3, keyword:"een energieke remix",            fb:"fb-dj",    emoji:"🎧",
+        photo:PH(600,450,"dj,headphones,electronic,music,neon",27),
+        desc:'"Een energieke remix met onverwachte beats en samples"' },
+    ]
+  },
+  // ── As 4: Prikkel ──
+  {
+    axis:"As 4 · De Prikkel", text:"Welk snoepje vis je instinctief uit een pot?",
+    options:[
+      { letter:"A", score:1, keyword:"knalzure snoepjes",  fb:"fb-sour",    emoji:"🍬",
+        photo:PH(600,450,"sour,candy,lemon,yellow,sugar",28),
+        desc:'"Een knalzuur matje dat je kaken laat samentrekken"' },
+      { letter:"B", score:2, keyword:"klassieke winegums", fb:"fb-gummy",   emoji:"🍬",
+        photo:PH(600,450,"gummy,bears,candy,colorful,sweets",29),
+        desc:'"Een klassieke winegum: balans tussen zoet en fruitig"' },
+      { letter:"C", score:3, keyword:"zachte karamel fudge", fb:"fb-caramel", emoji:"🍮",
+        photo:PH(600,450,"caramel,fudge,toffee,soft,sweet",30),
+        desc:'"Een zachte karamel-fudge die langzaam wegsmelt"' },
+    ]
+  },
+  {
+    axis:"As 4 · De Prikkel", text:"Wat is je ultieme vakantiebestemming?",
+    options:[
+      { letter:"A", score:1, keyword:"een bergwandeling door weer en wind", fb:"fb-mountain", emoji:"⛰️",
+        photo:PH(600,450,"mountain,hiking,trail,alpine,trekking",31),
+        desc:'"Een bergwandeling door weer en wind"' },
+      { letter:"B", score:2, keyword:"een bruisende citytrip",              fb:"fb-city",     emoji:"🌆",
+        photo:PH(600,450,"city,urban,street,travel,architecture",32),
+        desc:'"Een bruisende citytrip: dwalen en cultuur snuiven"' },
+      { letter:"C", score:3, keyword:"een hangmat op de Bahama's",          fb:"fb-beach",    emoji:"🏖️",
+        photo:PH(600,450,"tropical,beach,hammock,turquoise,paradise",33),
+        desc:'"Chillen op de Bahama\'s in een hangmat"' },
+    ]
+  },
+  {
+    axis:"As 4 · De Prikkel", text:"Hoe omschrijven vrienden jouw persoonlijkheid?",
+    options:[
+      { letter:"A", score:1, keyword:"pittig en direct",   fb:"fb-chili",  emoji:"🌶️",
+        photo:PH(600,450,"chili,pepper,red,spicy,hot",34),
+        desc:'"Pittig en direct: men weet wat ze aan je hebben"' },
+      { letter:"B", score:2, keyword:"rustig en stabiel",  fb:"fb-calm",   emoji:"🪨",
+        photo:PH(600,450,"zen,meditation,calm,rocks,peaceful",35),
+        desc:'"Rustig en stabiel: de rots in de branding"' },
+      { letter:"C", score:3, keyword:"warm en sociaal",    fb:"fb-social", emoji:"🤗",
+        photo:PH(600,450,"friends,laughing,happy,social,group",36),
+        desc:'"Een echte pleaser: warm, sociaal en houdt van gezelligheid"' },
+    ]
+  },
+];
+
+// ══════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════
+let currentQ = 0;
+let answers  = [];   // { score, keyword }
+let radarInst = null;
+
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  setTimeout(() => document.getElementById('loader').classList.add('hidden'), 1200);
+});
+
+function startQuiz() {
+  currentQ = 0; answers = [];
+  showScreen('quiz');
+  renderQuestion(false);
+}
+
+function restartQuiz() {
+  if (radarInst) { radarInst.destroy(); radarInst = null; }
+  startQuiz();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER QUESTION
+// ══════════════════════════════════════════════════════
+function renderQuestion(animate) {
+  const q    = QUESTIONS[currentQ];
+  const card = document.getElementById('questionCard');
+  const pct  = ((currentQ + 1) / 12) * 100;
+  document.getElementById('progressFill').style.width  = pct + '%';
+  document.getElementById('progressLabel').textContent = `Vraag ${currentQ+1} van 12`;
+  document.getElementById('stepNum').textContent        = currentQ + 1;
+
+  const html = `
+    <div class="question-axis"><span class="axis-dot"></span>${q.axis}</div>
+    <h2 class="question-text">${q.text}</h2>
+    <div class="options-grid">
+      ${q.options.map((opt, i) => `
+        <div class="option-card"
+             onclick="selectAnswer(${opt.score},${i},'${esc(opt.keyword)}')"
+             role="button" tabindex="0"
+             onkeydown="if(event.key==='Enter')selectAnswer(${opt.score},${i},'${esc(opt.keyword)}')">
+          <div class="option-photo">
+            <img src="${opt.photo}"
+                 alt="${opt.letter}"
+                 loading="lazy"
+                 onload="this.style.opacity=1"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+                 style="opacity:0;transition:opacity .3s">
+            <div class="option-photo-fallback ${opt.fb}" style="display:none">
+              <span class="fb-emoji">${opt.emoji}</span>
+            </div>
+          </div>
+          <div class="option-body">
+            <div class="option-letter">Optie ${opt.letter}</div>
+            <div class="option-desc">${opt.desc}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+
+  if (animate && card.innerHTML) {
+    card.classList.add('exiting');
+    setTimeout(() => { card.classList.remove('exiting'); card.innerHTML = html; }, 270);
+  } else {
+    card.innerHTML = html;
+  }
+}
+
+function esc(s) { return s.replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+
+// ══════════════════════════════════════════════════════
+//  SELECT ANSWER
+// ══════════════════════════════════════════════════════
+function selectAnswer(score, idx, keyword) {
+  document.querySelectorAll('.option-card')[idx]?.classList.add('selected');
+  setTimeout(() => {
+    answers.push({ score, keyword });
+    if (currentQ < 11) { currentQ++; renderQuestion(true); }
+    else showResults();
+  }, 320);
+}
+
+// ══════════════════════════════════════════════════════
+//  SCORES & MATCHING
+// ══════════════════════════════════════════════════════
+function calcScores() {
+  const avg = a => a.reduce((x,y)=>x+y,0) / a.length;
+  const sc  = answers.map(a => a.score);
+  return { basis:avg(sc.slice(0,3)), profiel:avg(sc.slice(3,6)), filosofie:avg(sc.slice(6,9)), prikkel:avg(sc.slice(9,12)) };
+}
+
+function euclidean(u, f) {
+  return Math.sqrt((u.basis-f.basis)**2+(u.profiel-f.profiel)**2+(u.filosofie-f.filosofie)**2+(u.prikkel-f.prikkel)**2);
+}
+
+function getTop3(u) {
+  return [...FLAVORS].map(f=>({...f,distance:euclidean(u,f)})).sort((a,b)=>a.distance-b.distance).slice(0,3);
+}
+
+// ══════════════════════════════════════════════════════
+//  SHOW RESULTS
+// ══════════════════════════════════════════════════════
+function showResults() {
+  const user = calcScores();
+  const top3 = getTop3(user);
+  showScreen('results');
+
+  const matchPct   = d => Math.round(Math.max(0,(1-d/4))*100);
+  const rankLabels = ['Uw #1 Smaak','Uw #2 Smaak','Uw #3 Smaak'];
+  const rankBadge  = ['1','2','3'];
+
+  // ── Flavor cards ──
+  document.getElementById('flavorCards').innerHTML = top3.map((f,i) => `
+    <div class="flavor-card rank-${i+1}">
+      <div class="flavor-rank-badge">${rankBadge[i]}</div>
+      <div class="flavor-photo">
+        <img src="${f.photo}" alt="${f.name}" loading="lazy"
+             onload="this.style.opacity=1"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+             style="opacity:0;transition:opacity .4s">
+        <div class="flavor-photo-fallback fb-gelato" style="display:none">
+          <span style="font-size:3.5rem">${f.emoji}</span>
+          <span style="font-size:.8rem;font-weight:800;color:var(--green)">${f.name}</span>
+        </div>
+      </div>
+      <div class="flavor-body">
+        <div class="flavor-rank-label">${rankLabels[i]}</div>
+        <div class="flavor-name">${f.name}</div>
+        <div class="flavor-tags">${f.tags.map(t=>`<span class="flavor-tag">${t}</span>`).join('')}</div>
+        <div class="flavor-match">Match: <strong>${matchPct(f.distance)}%</strong></div>
+      </div>
+    </div>
+  `).join('');
+
+  // ── Fun story ──
+  // Pick 3 vivid answers: Q2 (immersion), Q6 (aperitivo), Q11 (vacation)
+  const kw1 = answers[1].keyword;  // Q2
+  const kw2 = answers[5].keyword;  // Q6
+  const kw3 = answers[10].keyword; // Q11
+  const fn   = FLAVOR_STORIES[top3[0].name] || ((a,b,c) => `<strong>${a}</strong>, <strong>${b}</strong> en <strong>${c}</strong>. Dat zegt genoeg. <strong>${top3[0].name}</strong> is jouw match — en als je er goed over nadenkt, klopt dat gewoon.`);
+  const story = fn(kw1, kw2, kw3);
+
+  document.getElementById('funProfile').innerHTML = `
+    <div class="fun-eyebrow">✦ Jouw Smaak-Persoonlijkheid ✦</div>
+    <div class="fun-story">${story}</div>
+    <div class="fun-match-pill">🍦 &nbsp;Uw perfecte match: <strong>${top3[0].name}</strong></div>
+  `;
+
+  // ── Radar chart ──
+  const s4   = [user.basis, user.profiel, user.filosofie, user.prikkel];
+  const t1s  = [top3[0].basis, top3[0].profiel, top3[0].filosofie, top3[0].prikkel];
+  const ctx  = document.getElementById('radarChart').getContext('2d');
+  if (radarInst) radarInst.destroy();
+  radarInst = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: [['Basis','Water→Room'],['Profiel','Fris→Geroosterd'],['Filosofie','Puur→Mix'],['Prikkel','Zesty→Zalvend']],
+      datasets: [
+        { label:'Uw Smaak-DNA',
+          data: s4.map(v=>parseFloat(v.toFixed(2))),
+          backgroundColor:'rgba(204,107,99,.15)', borderColor:'#CC6B63',
+          borderWidth:2.5, pointBackgroundColor:'#CC6B63', pointRadius:5, pointHoverRadius:7 },
+        { label:`Top match: ${top3[0].name}`,
+          data: t1s,
+          backgroundColor:'rgba(58,92,40,.10)', borderColor:'#3A5C28',
+          borderWidth:2, borderDash:[5,4], pointBackgroundColor:'#3A5C28',
+          pointRadius:4, pointHoverRadius:6 }
+      ]
+    },
+    options: {
+      responsive:true,
+      plugins: {
+        legend:{display:false},
+        tooltip:{backgroundColor:'rgba(30,42,20,.92)',titleColor:'#F2EDE2',bodyColor:'#F2EDE2',padding:10,cornerRadius:8}
+      },
+      scales: {
+        r: {
+          min:0, max:3,
+          ticks:{stepSize:1,color:'#7A8E68',font:{size:10},backdropColor:'transparent'},
+          grid:{color:'rgba(58,92,40,.12)'},
+          angleLines:{color:'rgba(58,92,40,.14)'},
+          pointLabels:{font:{family:"'Nunito',sans-serif",size:12,weight:'700'},color:'#3A5C28',padding:12}
+        }
+      },
+      animation:{duration:900,easing:'easeInOutQuart'}
+    }
+  });
+
+  document.getElementById('radarLegend').innerHTML = `
+    <div class="radar-legend-item"><span class="rldot" style="background:#CC6B63"></span>Uw Smaak-DNA</div>
+    <div class="radar-legend-item"><span class="rldot" style="background:#3A5C28"></span>${top3[0].name} (Top Match)</div>
+    <div class="radar-legend-item" style="grid-column:1/-1"><span style="font-size:.78rem;color:var(--soft)">Schaal: 1 = Low &nbsp;·&nbsp; 3 = High</span></div>
+  `;
+}
+</script>
+</body>
+</html>
