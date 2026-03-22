@@ -20,7 +20,7 @@ const HeroSection = () => {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-primary-foreground leading-tight mb-6 text-balance"
         >
-          Bevrijd je lichaam van chronische spierspanning
+          Pandiculatie - Bevrijd je lichaam van chronische spierspanning
         </motion.h1>
 
         <motion.p
